@@ -410,9 +410,6 @@ class TradingAlgorithm(object):
         # target/delta of the capital changes, along with values
         self.capital_changes = kwargs.pop('capital_changes', {})
 
-        # A dictionary of the actual capital change deltas, keyed by timestamp
-        self.capital_change_deltas = {}
-
     def init_engine(self, get_loader):
         """
         Construct and store a PipelineEngine from loader.
@@ -839,12 +836,14 @@ class TradingAlgorithm(object):
                 self.perf_tracker.position_tracker.stats().net_value + \
                 self.perf_tracker.cumulative_performance.ending_cash
 
-            capital_change_amount = capital_change['value'] - portfolio_value
+            target = capital_change['value']
+            capital_change_amount = target - portfolio_value
 
             log.info('Processing capital change to target %s at %s. Capital '
-                     'change delta is %s' % (capital_change['value'], dt,
+                     'change delta is %s' % (target, dt,
                                              capital_change_amount))
         elif capital_change['type'] == 'delta':
+            target = None
             capital_change_amount = capital_change['value']
             log.info('Processing capital change of delta %s at %s'
                      % (capital_change_amount, dt))
@@ -853,9 +852,16 @@ class TradingAlgorithm(object):
                       "('target' or 'delta')" % capital_change)
             return
 
-        self.capital_change_deltas.update({dt: capital_change_amount})
         self.perf_tracker.process_capital_change(capital_change_amount,
                                                  is_interday)
+
+        yield {
+            'capital_change':
+                {'date': dt,
+                 'type': 'cash',
+                 'target': target,
+                 'delta': capital_change_amount}
+        }
 
     @api_method
     def get_environment(self, field='platform'):

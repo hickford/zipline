@@ -54,7 +54,7 @@ Installing With ``pip``
 -----------------------
 
 Assuming you have all required (see note below) non-Python dependencies, you
-can install Zipline with ``pip`` via:
+can install Zipline from `PyPI <https://pypi.python.org/pypi/zipline>`_ with ``pip`` via:
 
 .. code-block:: bash
 
